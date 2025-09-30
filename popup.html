@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      width: 320px;
+      padding: 15px;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #4CAF50;
+      padding-bottom: 10px;
+    }
+    
+    h1 {
+      font-size: 18px;
+      margin: 10px 0 5px 0;
+      color: #333;
+    }
+    
+    .status-text {
+      font-size: 13px;
+      color: #4CAF50;
+      font-weight: 500;
+    }
+    
+    .stats {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      text-align: center;
+      color: white;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .count {
+      font-size: 42px;
+      font-weight: bold;
+      margin: 10px 0;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .label {
+      font-size: 14px;
+      opacity: 0.95;
+    }
+    
+    .toggle-section {
+      margin: 20px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+    
+    .toggle-label {
+      font-weight: 500;
+      color: #333;
+    }
+    
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 54px;
+      height: 28px;
+    }
+    
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .3s;
+      border-radius: 28px;
+    }
+    
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    input:checked + .slider {
+      background-color: #4CAF50;
+    }
+    
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+    
+    .button {
+      width: 100%;
+      padding: 12px;
+      background: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      margin-top: 8px;
+      transition: background 0.3s;
+    }
+    
+    .button:hover {
+      background: #1976D2;
+    }
+    
+    .button:active {
+      transform: scale(0.98);
+    }
+    
+    .supported {
+      margin-top: 15px;
+      padding: 12px;
+      background: #E3F2FD;
+      border-radius: 8px;
+      font-size: 12px;
+    }
+    
+    .supported-title {
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #1976D2;
+      font-size: 13px;
+    }
+    
+    .platform {
+      display: inline-block;
+      background: white;
+      padding: 4px 10px;
+      margin: 3px;
+      border-radius: 12px;
+      font-size: 11px;
+      color: #555;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .footer {
+      margin-top: 15px;
+      text-align: center;
+      font-size: 11px;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🧹 Clean URL</h1>
+    <div class="status-text" id="statusText">✅ เปิดใช้งาน</div>
+  </div>
+  
+  <div class="stats">
+    <div class="label">URLs ที่ทำความสะอาดแล้ว</div>
+    <div class="count" id="cleanedCount">0</div>
+  </div>
+  
+  <div class="toggle-section">
+    <span class="toggle-label">เปิด/ปิดการทำงาน</span>
+    <label class="switch">
+      <input type="checkbox" id="toggleSwitch" checked>
+      <span class="slider"></span>
+    </label>
+  </div>
+  
+  <button class="button" id="resetBtn">🔄 รีเซ็ตตัวนับ</button>
+  
+  <div class="supported">
+    <div class="supported-title">🎯 รองรับแพลตฟอร์ม</div>
+    <span class="platform">Facebook</span>
+    <span class="platform">Google</span>
+    <span class="platform">Twitter/X</span>
+    <span class="platform">TikTok</span>
+    <span class="platform">Instagram</span>
+    <span class="platform">LinkedIn</span>
+    <span class="platform">Email</span>
+    <span class="platform">UTM ทั้งหมด</span>
+  </div>
+  
+  <div class="footer">
+    v1.1 | กดปุ่ม Refresh หากตัวเลขไม่อัพเดท
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -67,5 +67,12 @@ Clean URL automatically removes tracking parameters from URLs, making them clean
 
 #### Manual Installation (Developer Mode)
 1. Download or clone this repository
-```bash
-git clone https://github.com/yourusername/clean-url-extension.git
+```git clone https://github.com/yourusername/clean-url-extension.git```
+2. Open Chrome and navigate to chrome://extensions/
+3. Enable Developer mode (toggle in top-right corner)
+4. Click Load unpacked
+5. Select the extension folder
+   
+The extension is now installed! ✅
+
+

@@ -42,7 +42,7 @@ https://example.com/product
 4. เริ่มใช้งานได้ทันที
 
 **ติดตั้งด้วยตนเอง (ดาวน์โหลดจาก Releases)**
-1. ไปที่หน้า [GitHub Releases](/releases) แล้วคลิกดาวน์โหลดไฟล์ ZIP เวอร์ชันล่าสุด
+1. ดาวน์โหลดไฟล์ `Source code (zip)` จากรีลีสล่าสุดในหน้า [GitHub Releases](/releases)
 2. แตกไฟล์ ZIP ไปยังโฟลเดอร์ที่ต้องการในคอมพิวเตอร์ของคุณ
 3. เปิด Chrome แล้วไปที่ `chrome://extensions/`
 4. เปิด **Developer mode** (สวิตช์มุมบนขวา)

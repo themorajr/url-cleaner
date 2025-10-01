@@ -2,13 +2,12 @@
 
 [![Chrome Web Store](https://img.shields.io/badge/Chrome-Web%20Store-orange?logo=google-chrome)](https://chrome.google.com/webstore)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.1-green.svg)](manifest.json)
+[![Version](https://img.shields.io/badge/version-1.2--stable-green.svg)](manifest.json)
 
 > Clean, privacy-friendly links for every click.
 
-📚 **Documentation**
+📚 **Documentation** - 📖 [README index](README_TRANSLATIONS.md)
 - 🇬🇧 [English (base language)](README.md)
-- 📖 [README index](README_TRANSLATIONS.md)
 - 🇹🇭 [ภาษาไทย (Thai)](README.th.md)
 
 ---

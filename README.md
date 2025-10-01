@@ -7,7 +7,7 @@
 > Clean, privacy-friendly links for every click.
 
 📚 **Documentation**
-- 🇬🇧 English (base language)
+- 🇬🇧 [English (base language)](README.md)
 - 📖 [README index](README_TRANSLATIONS.md)
 - 🇹🇭 [ภาษาไทย (Thai)](README.th.md)
 

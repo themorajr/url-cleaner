@@ -47,7 +47,7 @@ https://example.com/product
 4. Start browsing – the extension works immediately.
 
 **Manual installation (recommended via Releases)**
-1. Download the latest ZIP from the [GitHub Releases page](/releases) and click **Download** on the newest version.
+1. Download the latest release ZIP from the [GitHub Releases page](/releases).
 2. Extract the archive to a convenient location on your computer.
 3. Open Chrome and navigate to `chrome://extensions/`.
 4. Enable **Developer mode** (top-right toggle).

@@ -47,7 +47,7 @@ https://example.com/product
 4. Start browsing – the extension works immediately.
 
 **Manual installation (recommended via Releases)**
-1. Download the latest release ZIP from the [GitHub Releases page](/releases).
+1. Download the latest release ZIP from the [GitHub Releases page]([/releases](https://github.com/themorajr/url-cleaner/releases/tag/v1.2-stable)).
 2. Extract the archive to a convenient location on your computer.
 3. Open Chrome and navigate to `chrome://extensions/`.
 4. Enable **Developer mode** (top-right toggle).

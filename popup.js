@@ -10,7 +10,7 @@ function updateUI() {
   document.getElementById('statusText').textContent =
     currentStatus.isEnabled ? '✅ Enabled' : '⏸️ Disabled';
   document.getElementById('statusText').style.color =
-    currentStatus.isEnabled ? '#4CAF50' : '#999';
+    currentStatus.isEnabled ? '#4CAF50' : '#F44336';
 }
 
 // Fetch the current status when the popup opens

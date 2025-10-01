@@ -101,6 +101,12 @@ function cleanURL(url) {
 
 // Update badge text and color
 function updateBadge() {
+  if (!settings.isEnabled) {
+    chrome.action.setBadgeText({ text: '⏸' });
+    chrome.action.setBadgeBackgroundColor({ color: '#F44336' });
+    return;
+  }
+
   if (settings.cleanedCount > 0) {
     chrome.action.setBadgeText({ text: settings.cleanedCount.toString() });
     chrome.action.setBadgeBackgroundColor({ color: '#4CAF50' });
@@ -167,6 +173,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'toggle') {
     settings.isEnabled = request.enabled;
     chrome.storage.sync.set({ isEnabled: settings.isEnabled });
+    updateBadge();
     console.log('Clean URL: Toggled', settings.isEnabled);
     sendResponse({ success: true, isEnabled: settings.isEnabled });
 
@@ -193,6 +200,7 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
     if (changes.isEnabled) {
       settings.isEnabled = changes.isEnabled.newValue;
       console.log('Clean URL: Settings synced - isEnabled:', settings.isEnabled);
+      updateBadge();
     }
     if (changes.cleanedCount) {
       settings.cleanedCount = changes.cleanedCount.newValue;

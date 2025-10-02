@@ -42,16 +42,43 @@ const TRACKING_PARAMS = [
 // Extension state persisted in storage
 let settings = {
   isEnabled: true,
-  cleanedCount: 0
+  cleanedCount: 0,
+  excludedDomains: [],
+  pauseUntil: null
 };
 
+let activeTabId = null;
+let activeTabDomain = null;
+
 // Load settings on startup
-chrome.storage.sync.get(['isEnabled', 'cleanedCount'], (result) => {
+chrome.storage.sync.get(['isEnabled', 'cleanedCount', 'excludedDomains', 'pauseUntil'], (result) => {
   settings.isEnabled = result.isEnabled !== false;
   settings.cleanedCount = result.cleanedCount || 0;
+  settings.excludedDomains = Array.isArray(result.excludedDomains) ? result.excludedDomains : [];
+  settings.pauseUntil = typeof result.pauseUntil === 'number' ? result.pauseUntil : null;
+  ensurePauseFreshness();
+  determineActiveTab();
   updateBadge();
   console.log('Clean URL: Loaded settings', settings);
 });
+
+function determineActiveTab() {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (chrome.runtime.lastError) {
+      console.warn('Clean URL: Unable to query active tab', chrome.runtime.lastError);
+      return;
+    }
+    const [tab] = tabs;
+    if (tab) {
+      activeTabId = tab.id;
+      activeTabDomain = extractHostname(tab.url);
+    } else {
+      activeTabId = null;
+      activeTabDomain = null;
+    }
+    updateBadge();
+  });
+}
 
 // URL cleaning helper
 function cleanURL(url) {
@@ -107,6 +134,18 @@ function updateBadge() {
     return;
   }
 
+  if (isTemporarilyPaused()) {
+    chrome.action.setBadgeText({ text: '⏳' });
+    chrome.action.setBadgeBackgroundColor({ color: '#9E9E9E' });
+    return;
+  }
+
+  if (activeTabDomain && settings.excludedDomains.includes(activeTabDomain)) {
+    chrome.action.setBadgeText({ text: '🚫' });
+    chrome.action.setBadgeBackgroundColor({ color: '#9E9E9E' });
+    return;
+  }
+
   if (settings.cleanedCount > 0) {
     chrome.action.setBadgeText({ text: settings.cleanedCount.toString() });
     chrome.action.setBadgeBackgroundColor({ color: '#4CAF50' });
@@ -119,15 +158,53 @@ function updateBadge() {
 function incrementCount() {
   settings.cleanedCount++;
   chrome.storage.sync.set({ cleanedCount: settings.cleanedCount });
-  updateBadge();
+  notifyStatusChanged();
+}
 
-  // Notify the popup to refresh (if it is open)
+function notifyStatusChanged() {
+  updateBadge();
+  const status = getStatusPayload();
   chrome.runtime.sendMessage({
-    action: 'countUpdated',
-    count: settings.cleanedCount
+    action: 'statusUpdated',
+    status
   }).catch(() => {
-    // Popup is not open - nothing to do
+    // No listeners available
   });
+}
+
+function getStatusPayload() {
+  return {
+    isEnabled: settings.isEnabled,
+    cleanedCount: settings.cleanedCount,
+    excludedDomains: settings.excludedDomains,
+    pauseUntil: settings.pauseUntil,
+    isPaused: isTemporarilyPaused()
+  };
+}
+
+function extractHostname(url) {
+  try {
+    return new URL(url).hostname;
+  } catch (e) {
+    return null;
+  }
+}
+
+function ensurePauseFreshness() {
+  if (settings.pauseUntil && Date.now() >= settings.pauseUntil) {
+    settings.pauseUntil = null;
+    chrome.storage.sync.set({ pauseUntil: null });
+  }
+}
+
+function isTemporarilyPaused() {
+  ensurePauseFreshness();
+  return Boolean(settings.pauseUntil && Date.now() < settings.pauseUntil);
+}
+
+function isDomainExcluded(url) {
+  const hostname = extractHostname(url);
+  return hostname ? settings.excludedDomains.includes(hostname) : false;
 }
 
 // Observe tab updates to trigger URL cleaning
@@ -138,8 +215,23 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     return;
   }
 
+  if (tabId === activeTabId && changeInfo.url) {
+    activeTabDomain = extractHostname(changeInfo.url);
+    updateBadge();
+  }
+
+  if (isTemporarilyPaused()) {
+    console.log('Clean URL: Temporarily paused');
+    updateBadge();
+    return;
+  }
+
   // Only process when the tab has a URL and it is changing
   if (changeInfo.url && tab.url) {
+    if (isDomainExcluded(changeInfo.url)) {
+      console.log('Clean URL: Domain excluded', extractHostname(changeInfo.url));
+      return;
+    }
     const cleanedURL = cleanURL(changeInfo.url);
 
     if (cleanedURL && cleanedURL !== changeInfo.url) {
@@ -154,6 +246,21 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 chrome.webNavigation.onCommitted.addListener((details) => {
   // Only handle the main frame while enabled
   if (!settings.isEnabled || details.frameId !== 0) {
+    return;
+  }
+
+  if (details.tabId === activeTabId) {
+    activeTabDomain = extractHostname(details.url);
+    updateBadge();
+  }
+
+  if (isTemporarilyPaused()) {
+    console.log('Clean URL: Temporarily paused');
+    return;
+  }
+
+  if (isDomainExcluded(details.url)) {
+    console.log('Clean URL: Domain excluded', extractHostname(details.url));
     return;
   }
 
@@ -172,23 +279,60 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   if (request.action === 'toggle') {
     settings.isEnabled = request.enabled;
-    chrome.storage.sync.set({ isEnabled: settings.isEnabled });
-    updateBadge();
+    settings.pauseUntil = null;
+    chrome.storage.sync.set({ isEnabled: settings.isEnabled, pauseUntil: null });
+    notifyStatusChanged();
     console.log('Clean URL: Toggled', settings.isEnabled);
     sendResponse({ success: true, isEnabled: settings.isEnabled });
 
   } else if (request.action === 'getStatus') {
-    sendResponse({
-      isEnabled: settings.isEnabled,
-      cleanedCount: settings.cleanedCount
-    });
+    sendResponse(getStatusPayload());
 
   } else if (request.action === 'resetCount') {
     settings.cleanedCount = 0;
     chrome.storage.sync.set({ cleanedCount: 0 });
-    updateBadge();
+    notifyStatusChanged();
     console.log('Clean URL: Reset count');
     sendResponse({ success: true });
+  } else if (request.action === 'pause') {
+    const durationMinutes = Number(request.minutes);
+    if (!Number.isFinite(durationMinutes) || durationMinutes <= 0) {
+      sendResponse({ success: false, error: 'Invalid duration' });
+      return true;
+    }
+    settings.pauseUntil = Date.now() + durationMinutes * 60 * 1000;
+    chrome.storage.sync.set({ pauseUntil: settings.pauseUntil });
+    notifyStatusChanged();
+    console.log('Clean URL: Paused until', new Date(settings.pauseUntil).toISOString());
+    sendResponse({ success: true, pauseUntil: settings.pauseUntil });
+  } else if (request.action === 'resume') {
+    settings.pauseUntil = null;
+    chrome.storage.sync.set({ pauseUntil: null });
+    notifyStatusChanged();
+    console.log('Clean URL: Pause cleared');
+    sendResponse({ success: true });
+  } else if (request.action === 'updateExcludedDomain') {
+    const domain = request.domain;
+    if (!domain) {
+      sendResponse({ success: false, error: 'Invalid domain' });
+      return true;
+    }
+    const shouldExclude = Boolean(request.exclude);
+    const existingIndex = settings.excludedDomains.indexOf(domain);
+    let changed = false;
+    if (shouldExclude && existingIndex === -1) {
+      settings.excludedDomains.push(domain);
+      changed = true;
+    } else if (!shouldExclude && existingIndex !== -1) {
+      settings.excludedDomains.splice(existingIndex, 1);
+      changed = true;
+    }
+    if (changed) {
+      chrome.storage.sync.set({ excludedDomains: settings.excludedDomains });
+      notifyStatusChanged();
+      console.log('Clean URL: Updated exclusions', settings.excludedDomains);
+    }
+    sendResponse({ success: true, excludedDomains: settings.excludedDomains.slice() });
   }
 
   return true; // Keep the channel open for async responses
@@ -197,16 +341,49 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // Sync settings updates from other extension contexts
 chrome.storage.onChanged.addListener((changes, namespace) => {
   if (namespace === 'sync') {
+    let shouldNotify = false;
     if (changes.isEnabled) {
       settings.isEnabled = changes.isEnabled.newValue;
       console.log('Clean URL: Settings synced - isEnabled:', settings.isEnabled);
       updateBadge();
+      shouldNotify = true;
     }
     if (changes.cleanedCount) {
       settings.cleanedCount = changes.cleanedCount.newValue;
       updateBadge();
+      shouldNotify = true;
+    }
+    if (changes.excludedDomains) {
+      settings.excludedDomains = Array.isArray(changes.excludedDomains.newValue)
+        ? changes.excludedDomains.newValue
+        : [];
+      updateBadge();
+      shouldNotify = true;
+    }
+    if (changes.pauseUntil) {
+      settings.pauseUntil = typeof changes.pauseUntil.newValue === 'number'
+        ? changes.pauseUntil.newValue
+        : null;
+      updateBadge();
+      shouldNotify = true;
+    }
+    if (shouldNotify) {
+      notifyStatusChanged();
     }
   }
+});
+
+chrome.tabs.onActivated.addListener(({ tabId }) => {
+  activeTabId = tabId;
+  chrome.tabs.get(tabId, (tab) => {
+    if (chrome.runtime.lastError) {
+      console.warn('Clean URL: Unable to get activated tab', chrome.runtime.lastError);
+      activeTabDomain = null;
+    } else {
+      activeTabDomain = extractHostname(tab.url);
+    }
+    updateBadge();
+  });
 });
 
 console.log('Clean URL: Background script loaded');

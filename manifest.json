@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Clean URL - ลบ UTM & Tracking",
-  "version": "1.2-stable",
+  "version": "1.2",
   "description": "ลบ UTM parameters และ tracking parameters จาก URL อัตโนมัติ",
   "permissions": [
     "storage",
